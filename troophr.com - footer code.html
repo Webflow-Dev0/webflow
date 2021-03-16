@@ -1,0 +1,547 @@
+<!--Memberstack to Heap -->
+<script>
+  MemberStack.onReady.then(function(member) {
+    if (member.loggedIn) {
+      try{
+        const userProperties = {
+          'FName': member["first-name"],
+          'Email': member["email"],
+        }
+        heap.identify(member["email"]);
+        heap.addUserProperties(userProperties);
+      } catch(e) {
+        console.log(e);
+      }
+    }
+  })
+</script>
+
+<script type="text/javascript">
+  $(window).scroll(function(){
+    var aTop = 150;//$('.hero-h1').position().top;
+    var height = $('.homepage-navbar').height();
+
+    if($(this).scrollTop()>= (aTop - height)){
+      $('.navbar-shadow').show();
+    } else {
+      $('.navbar-shadow').hide();
+    }
+    
+    if ($('#section_2').length > 0) {
+      var second_section = $('#section_2').position().top - 200;
+      if($(this).scrollTop()>= second_section){
+        $('.discount-popup .join-us').show();
+      } else {
+        $('.discount-popup .join-us').hide();
+      }
+    }
+  });
+
+  if( document.readyState !== 'loading' ) {
+    // document is already ready!
+    Custom_Code();
+  } else {
+    document.addEventListener('DOMContentLoaded', function () {
+      // document was not ready, place code here
+      Custom_Code ();      
+    });
+  }
+
+  function Custom_Code() {
+    window.MemberStack.onReady.then((member) => {
+      if (member.loggedIn) {
+        $('.homepage-nav-menu .signin').hide();
+        $('.homepage-nav-menu .join').hide();
+        //$('.homepage-nav-menu .logout').hide();
+        $('.homepage-nav-menu .member-portal').css('display', 'block');
+        //$('body.become-a-member .homepage-nav-menu .member-portal').text('Home');
+
+        $('.hero-button-row.join').hide();
+
+        $('.footer-email.hello').hide();
+        $('.footer-email.support').show();
+      } else {
+        $('.homepage-nav-menu .signin').css('display', 'block');
+        $('.homepage-nav-menu .join').css('display', 'block');
+        $('.homepage-nav-menu .member-portal').hide();
+        
+        $('.hero-button-row.join').show();
+      }
+      //============ console.log('MEMBER: ', member);
+    });
+  }
+
+  $(document).ready(function() {
+    var ca = document.cookie.split(';');
+    //console.log (ca);
+    
+    var isPaidMember = false;
+    var member_loggedIn = false;
+    window.MemberStack.onReady.then((member) => {
+      console.log (member);
+      if (member.loggedIn) {
+        member_loggedIn = true;
+        
+        if (member.membership.id == "5ffd3e9368c4ca0004481b31") { //basic plan
+          isPaidMember = false;
+        } else { // paid plan
+          isPaidMember = true;
+        }
+      } else {
+      }
+    });
+    
+    $(".forgot-password").click(function(e){
+      $(".ms-reset-container").css('background-color', '#FFFAEF');
+      $("#memberstack-forgot-portal .ms-token-field").val('');
+    });
+    
+    // session variable for show/hide Success Popup
+    var show_signup_success = localStorage['show_signup_success'];
+
+    $(".submit-button.step-five").click(function(e){
+      localStorage['show_signup_success'] = "yes";
+    });
+
+    $(".submit-button.success-continue").click(function(e){
+      localStorage['show_signup_success'] = "no";
+    });
+
+    if (show_signup_success == 'no') {
+      $('.success-popup').css ('display', 'none');
+    } else {
+      window.MemberStack.onReady.then((member) => {
+        if (member.loggedIn) {
+          $('.success-popup').css ('display', 'flex');
+        }
+      });
+    }
+
+    if (location.href.indexOf("from_email=true") > -1) {
+      $(".nav-link.signin").attr('href', '/login?from_email=true');
+      $(".homepage-nav-menu .join").attr('href', '/signup?from_email=true')
+      window.MemberStack.onReady.then((member) => {
+        if (member.loggedIn) {
+          $('.join-us-button').children().first().html('Become a member');
+        }
+      })
+    } else {
+      $(".nav-link.signin").attr('href', '/login');
+      $(".homepage-nav-menu .join").attr('href', '/signup')
+    }
+    
+    $(".login-here").click(function(e){
+      e.preventDefault();
+      if (location.href.indexOf("from_email=true") > -1) {
+        window.location.href = "https://www.troophr.com/login?from_email=true";
+        localStorage.setItem('locat', 'https://www.troophr.com/become-a-member?from_email=true');
+      } else {
+        window.location.href = "https://www.troophr.com/login";
+        localStorage.setItem('locat', 'https://www.troophr.com/become-a-member');
+      }
+      
+      return false;
+    });
+    
+    $(".join-us-button").click(function(e){
+      if (!member_loggedIn) {
+        e.preventDefault();
+        //$('.signup-modal1').css ({'display': 'flex', 'opacity': '1'});
+        if (location.href.indexOf("from_email=true") > -1) {
+          window.location.href = "https://www.troophr.com/signup?from_email=true";
+        } else {
+          window.location.href = "https://www.troophr.com/signup";
+        }
+        return false;
+      }
+    });
+    
+    // Close Modal on Click Outside
+    $(document).click(function(e) {
+      if (!$(e.target).closest("#memberstack-checkout-portal .ms-modal-container").length) {
+        $("#memberstack-checkout-portal").hide();
+        return;
+      }
+      
+      if ($("#memberstack-checkout-portal").is(":hidden")) {
+        if (!$(e.target).closest(".modal-content, .join-us-button, .password-alert, .ms-modal-container").length) {
+          $("body").find(".signup-modal1").hide();
+        }
+      }
+    });
+
+    // "Join us" on "Become a member" page -> Click "Continue" on Signup Modal
+    $(".signup-button").click(function(e){
+      //Add X to Payment Modal
+      if (!$(".become-a-member #memberstack-checkout-portal .ms-checkout-header .close-payment").length) {
+        var close_txt = "<div class='close-payment'><img src='https://assets-global.website-files.com/5ffd1907e9a2e50fbf716584/6002eb27e6f5592eb92eec5a_close.svg' loading='lazy' alt='Close SVG'></div><script>$('.close-payment').click(function(e){$('#memberstack-checkout-portal').hide();})</" + "script>";
+        $(".become-a-member #memberstack-checkout-portal .ms-checkout-header").append(close_txt);
+      }
+      
+      var fname = $("#FNAME").val();
+      var lname = $("#LNAME").val();
+      var email = $("#signup-email").val();
+      var title = $("#Title").val();
+      var company = $("#Company").val();
+      var location = $("#Location").val();
+      var linkedin = $("#Linkedin-URL").val();
+      
+      var pw = $("#password").val();
+      var confirm_pw = $("#confirm-password").val();
+      
+      if (fname && lname && email && title && company && location) {
+        if (pw =='' || confirm_pw == '' || pw != confirm_pw) {
+          $(".password-alert").css ({'display' : 'flex', 'z-index': '1001', 'opacity': '1'});
+          //e.preventDefault();
+          return false;
+        }
+      }
+      
+      if (email && pw) {
+        var d = new Date();
+        d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
+        var expires = ";expires="+d.toUTCString();
+
+        document.cookie = "email=" + email + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "pw=" + pw + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "fname=" + fname + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "lname=" + lname + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "title=" + title + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "company=" + company + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "location=" + location + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "linkedin=" + linkedin + ";domain=.troophr.com;path=/" + expires;
+      }
+    });
+
+    $(".submit-button.step-three").click(function(e){
+      Show_3_Popup (e);
+    });
+
+    $(".submit-button.step-four").click(function(e){
+      Show_3_Popup (e);
+    });
+
+    function Show_3_Popup(event) {
+      var length = 0;
+      var selected_items = $("form input[type=checkbox]:checked");
+      length = $(selected_items).length;
+
+      if (length != 3) {
+        $(".popup-3").css({'display': 'flex', 'opacity': '1', 'z-index': '1000'});
+        $("#ms-warning-box").css ('z-index', '0');
+
+
+        if (length == 0) {
+          $(".popup-desc").html("You didn't choose at all. To continue, please choose 3 items.");
+        } else if (length == 1){
+          $(".popup-desc").html("You chose only 1 item. To continue, please choose 3 items.");
+        } else {
+          $(".popup-desc").html("You chose " + length + " items. To continue, please choose 3 items.");
+        }
+        event.preventDefault();
+        return false;
+      }
+    }
+
+    $(".popup-close").click(function(e){
+      $(".popup-3").css({'display': 'none', 'z-index': '-1'});
+    });
+    
+    $(".close-password-alert").click(function(e){
+      $(".password-alert").css({'display': 'none', 'z-index': '-1'});
+    });
+
+    // About - Leaderships
+    $('.person-card-text-wrap .person-card-text').css ({'height': '0', 'opacity': '0'});
+    $('.person-card-text-wrap').hide();
+
+    $(".page-wrapper.about .person-card.about").click(function(e){
+      var person_text_wrap = $(this).parent().find('.person-card-text-wrap');
+      var person_text = $(this).parent().find('.person-card-text-wrap .person-card-text');
+
+      var animateTime = 100;
+
+      // initialize
+      var person_text_list = $('.person-card-text-wrap');
+      for (var i = 0; i < person_text_list.length; i++) {
+        if ($(this) != $(person_text_list[i])) {
+          $(person_text_list[i]).hide();
+          $(person_text_list[i]).find('.person-card-text').stop().animate({ display: 'none', height: '0', opacity: '0' }, animateTime);
+          $('.person-card.about').css ('border-bottom', '1px solid rgba(34, 34, 34, 0.2)');
+        }
+      }
+
+      if(person_text.height() === 0){
+        person_text_wrap.show();
+        autoHeightAnimate(person_text, animateTime);
+
+        $(this).css ('border-bottom', '2px solid #11674a');
+      } else {
+        person_text_wrap.hide();
+        person_text.stop().animate({ display: 'none', height: '0', opacity: '0' }, animateTime);
+
+        $(this).css ('border-bottom', '1px solid rgba(34, 34, 34, 0.2)');
+      }
+    });
+
+    /* Function to animate height: auto */
+    function autoHeightAnimate(element, time){
+      var curHeight = element.outerHeight(), // Get Default Height
+          autoHeight = element.css('height', 'auto').height(); // Get Auto Height
+
+      element.height(curHeight); // Reset to Default Height
+      element.stop().animate({ display: 'block', height: autoHeight, opacity: '1' }, time); // Animate to Auto Height
+    }
+
+    $(".logout").click(function(e){
+      document.cookie = "email=; domain=.troophr.com; path=/";
+      document.cookie = "pw=; domain=.troophr.com; path=/";
+    })
+
+    $(".nav-link.signin").click(function(e){
+      if (location.href.indexOf("login") < 0) {
+        localStorage.setItem('locat', location.href);
+      }
+
+      /*e.preventDefault();
+      if (location.href.indexOf("from_email=true") > -1) {
+        window.location.href = "https://www.troophr.com/login?from_email=true";
+      } else {
+        window.location.href = "https://www.troophr.com/login";
+      }
+      return false;*/
+    });
+    
+    $(".homepage-nav-menu .join").click(function(e){
+    });
+
+    $(".submit-button.login").click(function(e){
+      // Auto Login (troophr <-> members.troophr.com)
+      var email = $("input[data-name='Email']").val();
+      var password = $("input[data-name='Password']").val();
+
+      if (email && password) {
+        var d = new Date();
+        d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
+        var expires = ";expires="+d.toUTCString();
+
+        document.cookie = "email=" + email + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "pw=" + password + ";domain=.troophr.com;path=/" + expires;
+      }
+    })
+    
+    $(".submit-button.signup").click(function(e){
+      var fname = $("#FNAME").val();
+      var lname = $("#LNAME").val();
+      var email = $("#signup-email").val();
+      var title = $("#Title").val();
+      var company = $("#Company").val();
+      var location = $("#Location").val();
+      var linkedin = $("#Linkedin-URL").val();
+      
+      var pw = $("#password").val();
+      var confirm_pw = $("#confirm-password").val();
+      
+      if (fname && lname && email && title && company && location) {
+        if (pw =='' || confirm_pw == '' || pw != confirm_pw) {
+          $(".password-alert").css ({'display' : 'flex', 'z-index': '1001', 'opacity': '1'});
+          //e.preventDefault();
+          return false;
+        }
+      }
+      
+      // Auto Login (troophr <-> members.troophr.com)
+      var email = $("input[data-name='Email']").val();
+      if (email && pw) {
+        var d = new Date();
+        d.setTime(d.getTime() + (365 * 24 * 60 * 60 * 1000));
+        var expires = ";expires="+d.toUTCString();
+        //console.log ("email=" + email + ";domain=.troophr.com;path=/" + expires);
+
+        document.cookie = "email=" + email + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "pw=" + pw + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "fname=" + fname + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "lname=" + lname + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "title=" + title + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "company=" + company + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "location=" + location + ";domain=.troophr.com;path=/" + expires;
+        document.cookie = "linkedin=" + linkedin + ";domain=.troophr.com;path=/" + expires;
+
+        /*window.MemberStack.onReady.then((member) => {
+          let jsonObj = {
+            memberstack_id: member['id'],
+            email: email,
+            password: pw
+          }
+
+          $.ajax({
+            type: "POST",
+            url: "https://gateway.troophr.com/v1/members",
+            data: JSON.stringify(jsonObj),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function(data){
+              console.log(data);
+              //$(".signup-form").submit();
+            },
+            error: function(errMsg) {
+              console.log(errMsg);
+            }
+          });
+        });*/
+      }
+    })
+
+    $(".member-portal").click(function(e){
+      visitCircle ();
+    })
+
+    // ------------ Visit Circle --------------
+    $(".welcome-profile-link").click(function(e){
+      e.preventDefault();
+      visitCircle ();
+    })
+      
+    $(".submit-button.welcome").click(function(e){
+      e.preventDefault();
+      visitCircle ();
+    })
+    
+    function visitCircle () {
+      // Auto Login (troophr <-> circle)
+      var email = getCookie('email');
+      var password = getCookie('pw');
+      var circle_url = "https://community.troophr.com/";
+
+      if (email && password) {
+        var xhttp = new XMLHttpRequest();
+        var xmlHttpTimeout=setTimeout(function () {xhttp.abort();}, 3000);
+        xhttp.onreadystatechange = function() {
+          console.log (this.readyState, this.status);
+          if (this.readyState == 4 && this.status == 200) {
+            //clearTimeout(xmlHttpTimeout);
+            
+            var result = JSON.parse(this.responseText);
+            console.log (result);
+            
+            if (result.success) {
+              console.log ("Gjiro - Success!", result.callback_url);
+              circle_url = result.callback_url;
+              
+              /*var win1 = window.open(circle_url,
+                                     '_blank',
+                                    'toolbar=no,status=no,menubar=no,scrollbars=no,resizable=no,left=10000, top=10000, width=1, height=1, visible=none', ''
+                                    );*/
+              
+              $('#fr').attr('src', circle_url);
+              $('.member-popup').css ('display', 'flex');
+              
+              setTimeout(function(){
+                //win1.close();
+                
+                if (!isPaidMember) { // free plan - Welcome & Discussions
+                  window.open('https://community.troophr.com/join?invitation_token=abfc0c8bb366ad213cab23a593049c68101997b1-69368460-7370-4cf8-87bb-7da591a44660', '_self');
+                } else { // paid plan - All
+                  window.open('https://community.troophr.com/join?invitation_token=d0e1ec1ff5d91e7fa7981f147f8ba7b9f67ae765-a4060938-2bff-41de-a711-1f1fffb8abaf', '_self');
+                }
+              }, 8000);
+            }
+          } else {
+            //alert ("could you please try again!");
+          }
+        };
+
+        xhttp.open("POST", "https://api.memberstack.io/member/oauth/authenticate", true);
+        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded; charset=UTF-8");
+        xhttp.setRequestHeader("X-API-KEY", "37d644d3fda408d1a422fdaf22f65bb6");
+        xhttp.send('email=' + encodeURIComponent(email) + '&password=' + encodeURIComponent(password) + '&client_id=5659970ce92a450312723824&redirect_uri=https://community.troophr.com/oauth2/callback');
+                
+        setTimeout(function() {
+          if (xhttp.readyState < 4) {
+            xhttp.abort();
+          }
+        }, 2000);
+        
+      } else {
+        //alert ("Cookie - Email or Passworrd not exist!");
+        window.open(
+          circle_url,
+          '_self'
+        );
+      }
+    }
+  })
+  
+  function setCookie(cname, cvalue, exdays) {
+    var d = new Date();
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+    var expires = "expires="+d.toUTCString();
+    document.cookie = cname + "=" + cvalue + ";" + expires + ";domain=.troophr.com;path=/";
+  }
+
+  function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
+    return "";
+  }
+</script>
+
+<script>
+  var accordion = (function(){
+
+    var $accordion = $('.js-accordion');
+    var $accordion_header = $accordion.find('.js-accordion-header');
+    var $accordion_item = $('.js-accordion-item');
+
+    // default settings 
+    var settings = {
+      speed: 400,
+      // close all other accordion items if true
+      oneOpen: false,
+    };
+
+    return {
+      // pass configurable object literal
+      init: function($settings) {
+        $accordion_header.on('click', function() {
+          accordion.toggle($(this));
+        });
+
+        $.extend(settings, $settings); 
+
+        if(settings.oneOpen && $('.js-accordion-item.active').length > 1) {
+          $('.js-accordion-item.active:not(:first)').removeClass('active');
+        }
+        
+        $('.js-accordion-item.active').find('> .js-accordion-body').show();
+      },
+      toggle: function($this) {
+
+        if(settings.oneOpen && $this[0] != $this.closest('.js-accordion').find('> .js-accordion-item.active > .js-accordion-header')[0]) {
+          $this.closest('.js-accordion')
+            .find('> .js-accordion-item') 
+            .removeClass('active')
+            .find('.js-accordion-body')
+            .slideUp()
+        }
+
+        // show/hide the clicked accordion item
+        $this.closest('.js-accordion-item').toggleClass('active');
+        $this.next().stop().slideToggle(settings.speed);
+      }
+    }
+  })();
+
+  $(document).ready(function(){
+    accordion.init({ speed: 300, oneOpen: true });
+  });
+</script>

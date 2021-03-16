@@ -1,0 +1,328 @@
+<!--Memberstack to Heap -->
+
+<script>
+  MemberStack.onReady.then(function(member) {
+    if (member.loggedIn) {
+      try{
+        const userProperties = {
+          'FName': member["first-name"],
+          'Email': member["email"],
+        }
+        heap.identify(member["email"]);
+        heap.addUserProperties(userProperties);
+      } catch(e) {
+        console.log(e);
+      }
+    }
+  })
+</script>
+
+<script type="text/javascript">
+  if( document.readyState !== 'loading' ) {
+    // document is already ready!
+    Custom_Code();
+  } else {
+    document.addEventListener('DOMContentLoaded', function () {
+      // document was not ready, place code here
+      Custom_Code ();
+    });
+  }
+
+  function Custom_Code() {
+    window.MemberStack.onReady.then((member) => {
+      if (member.loggedIn) {
+        $('.homepage-nav-menu .signin').hide();
+        $('.homepage-nav-menu .join').hide();
+        //$('.homepage-nav-menu .logout').hide();
+
+        if (member.membership.id == "5ffd3e9368c4ca0004481b31") { //basic plan
+          $('.homepage-nav-menu .become-a-member').css('display', 'flex');
+        } else { // paid plan
+          $('.homepage-nav-menu .become-a-member').hide();
+          //$('.rsvp-action-area').css('display', 'flex');
+        }
+
+        $('.footer-email.hello').hide();
+        $('.footer-email.support').show();
+        $('.footer-link.contact-us').show();
+
+      } else {
+        $('.rsvp-action-area').hide();
+
+        if (window.location.href != 'https://members.troophr.com/login') {
+          var ca = document.cookie.split(';');
+
+          var email = getCookie('email');
+          var password = getCookie('pw');
+
+          if (email && password) {
+            $("#email").val(email);
+            $("#password").val(password);
+          }
+
+          $(".submit-button.login" ).click();
+
+          //setTimeout(function(){ $(".submit-button.login" ).click(); }, 3000);
+          //setTimeout(function(){ $("#email-form").submit(); }, 3000);
+        }
+      }
+
+      console.log('MEMBER: ', member);
+    });
+  }
+
+  $(document).ready(function() {
+    $('.green-bg').css('z-index', '102');
+    
+    //customize Memberstack Modal
+    setTimeout(function(){
+      $("div[ms-lang='profile_nav_profile']").text("Account");
+      $("div[ms-lang='profile_nav_member']").text("Billing");
+      $('.ms-portal-logout').hide();
+
+      $("div[data-cy='cancelMembershipBox']").show();
+      $("div[data-cy='cancelMembershipBox']").append("<div class='info-text'>For questions about your membership please email <a href='mailto: support@troophr.com' style='color: #11674a'>support@troophr.com</a></div>");
+      $("div[ms-lang='profile_period_end']").hide();
+
+      $("div[ms-lang='profile_cancel']").hide();
+      $("div[ms-lang='profile_confirm_cancel']").hide();
+      
+      var target = document.querySelector(".ms-portal");
+      var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutationRecord) {
+          console.log (target);
+          observer.disconnect();
+        })
+      })
+      var config = { attributes: true, childList: true, subtree: true, attributeFilter : ['class', 'style'] };
+      if (target) observer.observe(target, config);
+    }, 2000);
+
+    $(window).scroll(function(){
+      var aTop = 150;//$('.hero-h1').position().top;
+      var height = $('.homepage-navbar').height();
+
+      if($(this).scrollTop()>= (aTop - height)){
+        $('.navbar-shadow').show();
+      } else {
+        $('.navbar-shadow').hide();
+      }
+    });
+    
+    $(".nav-link.signin").click(function(e){
+      if (location.href.indexOf("login") < 0) {
+        localStorage.setItem('locat', location.href);
+      }
+    });
+
+    // ------------ RSVP / Attending begin --------------
+    $(document).on("click", ".action-button.rsvp" , function(e) {
+      var button = e.target;
+      var eid = $(button).data('eid');
+      window.MemberStack.onReady.then((member) => {
+        if (member.loggedIn) {
+          
+          $(button).hide();
+          $(button).closest('.rsvp-action-area').find('.btn-loader.lds-dual-ring').show();
+          
+          let jsonObj = {
+            memberstack_id: getCookie('thr_ms_id'),
+            eventbrite_id: eid,
+            status: "Attending"
+          }
+
+          $.ajax({
+            type: "POST",
+            url: "https://gateway.troophr.com/v1/events",
+            data: JSON.stringify(jsonObj),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            xhrFields: {
+              withCredentials: true
+            },
+            success: function(data){
+              console.log(data);
+            },
+            error: function(errMsg) {
+              console.log(errMsg);
+            },
+            complete: function () {
+              $(button).closest('.rsvp-action-area').find('.btn-loader.lds-dual-ring').hide();
+              $(button).hide();
+              $(button).closest('.rsvp-action-area').find('.attending-action-area').css('display', 'flex');
+            }
+          });
+        }
+      })
+    });
+
+    var prev;
+
+    $(document).on('mouseenter', '.action-button.attending', function(e) {
+      prev = $(e.target).text();
+      $(e.target).text("Cancel RSVP");
+    });
+
+    $(document).on('mouseleave', '.action-button.attending', function(e) {
+      $(e.target).text(prev);
+    });
+
+    /*$('.action-button.attending').hover(
+        function(){
+          prev = $(this).text();
+          $(this).text("Cancel RSVP");
+        },
+        function(){
+          $(this).text(prev);
+       	}
+    );*/
+
+    $(document).on("click", ".action-button.attending" , function(e) {
+      var button = e.target;
+      $(button).closest('.rsvp-action-area').find('.attending-action-area').hide();
+      $(button).closest('.rsvp-action-area').find('.action-button.rsvp').show();
+    });
+
+    /*$(".action-button.attending").click(function(e){
+        $('.attending-action-area').hide();
+          $('.action-button.rsvp').show();
+      });*/
+    // ------------ RSVP / Attending end --------------
+    
+    $(".load-more-button").click(function(e){
+      /*setTimeout(function(){
+        $('.rsvp-action-area').css('display', 'flex');
+      }, 5000);*/
+    });
+    
+    $(".submit-button.login" ).click(function(e){
+      var pw = $("#password").val();
+      
+      var isLoggedIn = false;
+      var ms_id = null;
+      window.MemberStack.onReady.then((member) => {
+        if (member.loggedIn) {
+          isLoggedIn = true;
+          ms_id = member['id'];
+          console.log ('login success');
+        }
+      })
+
+      if (!isLoggedIn) {
+        var detectLogin = setTimeout(function() {
+          let jsonObj = {
+            memberstack_id: ms_id,
+            password: pw
+          }
+
+          $.ajax({
+            type: "POST",
+            url: "https://gateway.troophr.com/v1/members/login",
+            data: JSON.stringify(jsonObj),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            xhrFields: {
+              withCredentials: true
+            },
+            success: function(data){
+              console.log(data);
+            },
+            error: function(errMsg) {
+              console.log(errMsg);
+            }
+          });
+        }, 200);
+      }
+      //e.preventDefault();
+    });
+    
+    $(".logout").click(function(e){
+      document.cookie = "email=; domain=.troophr.com; path=/";
+      document.cookie = "pw=; domain=.troophr.com; path=/";
+    });
+
+    // ------------ Visit Circle --------------
+    $("#community-link").click(function(e){
+      // Auto Login (troophr <-> circle)
+      var email = getCookie('email');
+      var password = getCookie('pw');
+      var circle_url = "https://community.troophr.com/";
+
+      if (email && password) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+          //console.log (this.readyState, this.status);
+          if (this.readyState == 4 && this.status == 200) {
+            var result = JSON.parse(this.responseText);
+            if (result.success) {
+              console.log ("Gjiro - Success!", result.callback_url);
+              circle_url = result.callback_url;
+              //alert ("Success!\n email = " + email + " " + "pw = " + password + '\n callback = ' +  circle_url);
+
+              //window.location.href = circle_url;
+              window.open(
+                circle_url,
+                '_self'
+                //'_blank'
+              );
+            }
+          } else {
+            window.open(
+              circle_url,
+              '_self'
+            );
+          }
+        };
+
+        xhttp.open("POST", "https://api.memberstack.io/member/oauth/authenticate", true);
+        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp.setRequestHeader("X-API-KEY", "37d644d3fda408d1a422fdaf22f65bb6");
+        xhttp.send('email=' + email + '&password=' + password + '&client_id=5659970ce92a450312723824&redirect_uri=https://community.troophr.com/oauth2/callback');
+      } else {
+        console.log ("Cookie - Email or Passworrd not exist!");
+        window.open(
+          circle_url,
+          '_self'
+        );
+      }
+    })
+
+    // --------------- Open tab using window hash ---------------
+    function changeTab() {
+      var tabName = window.location.hash.substr(1);
+      var tabEl = $('[id="' + tabName + '"]');
+      if (tabEl.length) {
+        $("html, body").animate({ scrollTop: 0 }, "slow");
+        tabEl.click();
+      }
+    }
+
+    //when page is first loaded
+    if(window.location.hash){
+      changeTab();
+    }
+
+    //internal page linking
+    $(window).on('hashchange', changeTab);
+
+    $('[data-w-tab]').on('click', function(){
+      //history.pushState({}, '', '#'+$(this).data("w-tab"));
+      history.pushState({}, '', '#'+$(this).attr('id'));
+    });
+  });
+
+  function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
+    return "";
+  }
+</script>
